@@ -1,5 +1,7 @@
 import importlib
 from .settings import paths
+import ast
+
 
 def import_module(_mod, search_paths:list=None):
     """
@@ -31,3 +33,27 @@ def import_module(_mod, search_paths:list=None):
     print(f"'{_mod}' could not be found in any of the provided library paths.")
     return None
 
+
+class AssignmentCounter(ast.NodeVisitor):
+    def __init__(self):
+        self.count = 0
+
+    def visit_Assign(self, node):
+        super().generic_visit(node)
+
+    def visit_FunctionDef(self, node):
+        self.count += 1
+        print(f"Found function: {node.name}")
+        super().generic_visit(node)
+
+    def visit_Import(self, node):
+        print(f"Found import: {node.name}")
+        super().generic_visit(node)
+
+    def visit_ImportFrom(self, node):
+        for mod in node.names:
+            methods = mod.__dict__
+            if mod.name == "Crafter":
+                print("Module is imported")
+
+        super().generic_visit(node)

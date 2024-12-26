@@ -1,4 +1,13 @@
 import ast
+from src.lib.transformers import CraftModifier
+
+
+new_args = {
+    "action": "create",
+    "repo": "DockCraft",
+    "branch": "master",
+    "commit": "No",  # Example: adding a new key
+}
 
 
 class Extractor:
@@ -33,20 +42,14 @@ class Extractor:
                 self._classes.append(n)
 
 
-class AssignmentCounter(ast.NodeVisitor):
-    def __init__(self):
-        self.count = 0
-
-    def visit_Assign(self, node):
-        self.count += 1
-        print(f"before super {node}")
-        super().generic_visit(node)
-        print(f"after super {node}")
-
-
 with open("GitPy.py", 'r') as f:
     data = f.read()
 
 tree = ast.parse(data)
 
-print(ast.dump(tree, indent=2))
+modifier = CraftModifier()
+modifier.new_args = new_args
+new_data = modifier.visit(tree)
+ast.fix_missing_locations(new_data)
+
+exec(compile(new_data, "<exec 12>", mode="exec"))

@@ -1,6 +1,7 @@
 class Crafter(object):
     def __init__(self, module_args=None):
         self.module_args: dict = module_args # that will be require in yaml
+        print(f"{self.module_args=}")
         self._params = None
 
     @property
