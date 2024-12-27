@@ -1,0 +1,19 @@
+
+- stages:
+    build:
+      - name: checkout the github repo
+        GitPy:
+          action: checkout
+          repo: https://github.com/vortexdude/Dockcraft
+          branch: master
+
+      - name: ping google
+        Bash:
+          command: "ping -c 3 google.com"
+          chdir: .
+
+      - name: command in remote
+        RemoteRun: nothing
+    deploy:
+      - name: Nothing
+        Bash: ls -lah

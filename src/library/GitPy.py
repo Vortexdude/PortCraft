@@ -1,3 +1,4 @@
+import sys
 from src.lib.common import Crafter
 
 
@@ -15,7 +16,7 @@ def run_module():
     )
 
     module = Crafter(module_args=_args)
-
+    # print(f"{module.module_args=}")
     module.exit(**_result)
 
 if __name__ == "__main__":
