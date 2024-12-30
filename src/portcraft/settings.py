@@ -3,7 +3,7 @@ from pathlib import Path
 CICD_PATH = "./.cicd"
 CICD_FILE_NAME = "main.yml"
 TMP_DIR = "/tmp/.cicd"
-LIBRARY_PATHS = ["./src/library"]
+LIBRARY_PATHS = ["portcraft/library"]
 
 
 class Paths:
@@ -13,7 +13,7 @@ class Paths:
 
         self._home_path = home_dir
         self._cicd_file = self._home_path / CICD_PATH / CICD_FILE_NAME
-        self._library_paths = [self._home_path / path for path in LIBRARY_PATHS]
+        self._library_paths = [self._home_path.parent / path for path in LIBRARY_PATHS]
 
     @property
     def home_path(self):
@@ -25,7 +25,7 @@ class Paths:
 
     @property
     def library_paths(self):
-        return self.lib_extractor()
+        return self._library_paths
 
     def lib_extractor(self):
         __lib_path = []

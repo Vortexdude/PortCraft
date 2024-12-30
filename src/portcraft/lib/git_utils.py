@@ -1,4 +1,5 @@
 from cloudhive import utils
+import requests
 
 
 class Git(object):
@@ -6,9 +7,10 @@ class Git(object):
         self._url = url
         self._user = user
         self._repo = repo
-        self.validate()
         self._headers = dict()
         self.base_url = "https://api.github.com"
+        self.validate()
+        self._is_public: bool = True
 
     def validate(self):
         if not self._url.startswith("https://github.com/"):
@@ -18,10 +20,15 @@ class Git(object):
             self._url = self._url[:-4]
 
         protocol, _, server, self._user, self._repo = self._url.split("/")
+        _url = utils.url_joiner(self.base_url, "repos", self._user, self._repo)
+        print(f"# => Validating repo {_url}")
+        response = requests.get(_url)
+        if response.status_code == 404:
+            print(f"# => repo {self._user} {self._repo} is not public")
+            self._is_public = False
 
     def __call__(self):
         return f"<Git {self._user}/{self._repo}>"
-
 
 
 class GitPy(Git):
@@ -29,28 +36,41 @@ class GitPy(Git):
     TEMP_FILE_LOCATION = "/tmp/.cicd"
     envs: dict = utils.load_env_vars("GIT_TOKEN")
 
+    def download_public_repo(self, branch=None, download_location=None):
+        file_name = f"{branch}.zip"
+        url = utils.url_joiner("https://github.com", self._user, self._repo, "archive/refs/heads", file_name)
+        print(f"# => Downloading public rep {url=}")
+        utils.download_file(url, file_name)
+        return file_name
+
+
     def download_repo(self, branch=None, pa_token:str=None, download_location=None):
 
         if not branch:
             branch = "main"
 
-        if not pa_token:
-            pa_token = self.envs.get("GIT_TOKEN")
+        if not self._is_public:
+            if not pa_token:
+                pa_token = self.envs.get("GIT_TOKEN")
 
-        if not pa_token:
-            raise Exception("please specify the personal access token first")
+            if not pa_token:
+                raise Exception("please specify the personal access token first")
+
+            self._headers['Authorization'] = f"Bearer {pa_token}"
 
         if not download_location:
             download_location = self.TEMP_FILE_LOCATION
 
         utils.create_directory(download_location)
-        self._headers['Accept'] = "application/vnd.github+json"
-        self._headers['Authorization'] = f"Bearer {pa_token}"
-        download_args = ("repos", self._user, self._repo, "zipball", branch)
-
-        url = utils.url_joiner(self.base_url, *download_args)
         local_file = utils.path_joiner(download_location, (self._repo + self.FILE_EXTENSION))
-        zip_file = utils.download_file(url, local_file, headers=self._headers)
+        if self._is_public:
+            zip_file = self.download_public_repo(branch=branch)
+
+        else:
+            self._headers['Accept'] = "application/vnd.github+json"
+            download_args = ("repos", self._user, self._repo, "zipball", branch)
+            url = utils.url_joiner(self.base_url, *download_args)
+            zip_file = utils.download_file(url, local_file, headers=self._headers)
         self.__file_handling(zip_file)
 
 
@@ -67,3 +87,7 @@ class GitPy(Git):
 
         # change the repo1 to the actual name of the repo
         utils.move_files(__temp_file, str(utils.path_joiner(self.TEMP_FILE_LOCATION, ultimate_file.stem)))
+
+
+gg = GitPy("https://github.com/Vortexdude/DockCraft")
+gg.download_repo(branch="master")

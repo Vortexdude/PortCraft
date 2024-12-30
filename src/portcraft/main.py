@@ -7,9 +7,9 @@ import importlib
 import sys
 from importlib.machinery import SourceFileLoader
 from cloudhive import utils
-from src.models import Module, Stage
-from src.utils import import_module
-from src.settings import paths
+from portcraft.models import Module, Stage
+from portcraft.utils  import import_module
+from portcraft.settings import paths
 
 
 class Extractor(object):
