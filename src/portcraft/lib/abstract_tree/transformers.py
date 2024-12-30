@@ -1,5 +1,6 @@
 import ast
 from .extractors import add_missing_attribute
+from cloudhive.utils import basename
 
 
 class TargetNodeVisitor(ast.NodeVisitor):
@@ -8,7 +9,8 @@ class TargetNodeVisitor(ast.NodeVisitor):
         self.target_node = None
 
     def visit_Call(self, node):
-        print(f"{node.__dict__}")
+        """Search the class in the file"""
+
         if isinstance(node.func, ast.Name) and node.func.id == self.outer.search_class:
             self.target_node = node
         self.generic_visit(node)
@@ -63,17 +65,14 @@ class Transformer:
         return modify.visit(self.tree)
 
     def run_module(self, module):
-        self.find_target_node()
-        exec_globals = {
-            "__name__": "__main__",  # Simulates running as the main module
-            "__file__": "GitPy.py",  # Simulates the file name
-            "__builtins__": __builtins__,  # Provides access to built-in functions
-        }
+        exec_globals = {"__name__": "__main__", "__builtins__": __builtins__, "__file__": basename(self.file_path)}
+
         for node in ast.iter_child_nodes(module):
             if isinstance(node, ast.ImportFrom):
+                print(node.module)
                 if node.names[0].name == "Crafter":
                     print("Crafter imported")
-                    from src.lib.common import Crafter
+                    from portcraft.module_utils.basic import Crafter
                     exec_globals['Crafter'] = Crafter
 
         return exec(compile(module, self.file_path, mode="exec"), exec_globals)

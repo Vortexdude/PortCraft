@@ -9,7 +9,7 @@ LIBRARY_PATHS = ["./src/library"]
 class Paths:
     def __init__(self, home_dir: Path=None):
         if not home_dir:
-            home_dir = Path(__file__).parent.parent
+            home_dir = Path(__file__).parent
 
         self._home_path = home_dir
         self._cicd_file = self._home_path / CICD_PATH / CICD_FILE_NAME

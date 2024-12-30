@@ -1,5 +1,5 @@
 # clone the github repo with the branch that need to be cloned
-from .git_ops import GitPy
+from src.portcraft.git_ops import GitPy
 
 
 
