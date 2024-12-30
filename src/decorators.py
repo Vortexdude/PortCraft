@@ -1,6 +1,3 @@
-access_token = "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"
-
-
 class AuthDecorator:
     def __init__(self, function):
         self.function = function
