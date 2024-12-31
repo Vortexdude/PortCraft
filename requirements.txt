@@ -1,6 +1,6 @@
 certifi==2024.12.14
 charset-normalizer==3.4.0
-cloudhive==1.0.1
+cloudhive==1.0.1a0
 idna==3.10
 markdown-it-py==3.0.0
 mdurl==0.1.2

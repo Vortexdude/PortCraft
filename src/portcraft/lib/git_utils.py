@@ -1,5 +1,13 @@
-from cloudhive import utils
+from cloudhive.utils import url_joiner, path_joiner, load_env_vars, download_file, move_files, cleanup_file, unzip, \
+    create_directory
 import requests
+import os
+
+def url_formatter(base_url, *args) -> str:
+    return url_joiner(base_url, *args)
+
+def rename_file(source, dest):
+    os.rename(source, dest)
 
 
 class Git(object):
@@ -8,9 +16,9 @@ class Git(object):
         self._user = user
         self._repo = repo
         self._headers = dict()
-        self.base_url = "https://api.github.com"
+        self.git_api_base_url = "https://api.github.com"
+        self.git_base_url = "https://github.com"
         self.validate()
-        self._is_public: bool = True
 
     def validate(self):
         if not self._url.startswith("https://github.com/"):
@@ -20,12 +28,19 @@ class Git(object):
             self._url = self._url[:-4]
 
         protocol, _, server, self._user, self._repo = self._url.split("/")
-        _url = utils.url_joiner(self.base_url, "repos", self._user, self._repo)
-        print(f"# => Validating repo {_url}")
+
+    def _repo_visibility(self) -> bool:
+
+        _url = url_formatter(self.git_api_base_url, "repos", self._user, self._repo)
         response = requests.get(_url)
         if response.status_code == 404:
             print(f"# => repo {self._user} {self._repo} is not public")
-            self._is_public = False
+            return False
+        return True
+
+    @property
+    def is_public(self):
+        return self._repo_visibility()
 
     def __call__(self):
         return f"<Git {self._user}/{self._repo}>"
@@ -34,60 +49,58 @@ class Git(object):
 class GitPy(Git):
     FILE_EXTENSION = ".zip"
     TEMP_FILE_LOCATION = "/tmp/.cicd"
-    envs: dict = utils.load_env_vars("GIT_TOKEN")
+    envs: dict = load_env_vars("GIT_TOKEN")
 
     def download_public_repo(self, branch=None, download_location=None):
         file_name = f"{branch}.zip"
-        url = utils.url_joiner("https://github.com", self._user, self._repo, "archive/refs/heads", file_name)
-        print(f"# => Downloading public rep {url=}")
-        utils.download_file(url, file_name)
-        return file_name
+        _url = url_formatter(self.git_base_url, self._user, self._repo, "archive/refs/heads", file_name)
+        print(f"# => Downloading public rep with {_url=}")
+        download_file(_url, file_name)
+        dest_file = f"{self._repo}.zip"
+        rename_file(file_name, dest_file)
+        return dest_file
 
+    def download_private_repo(self, branch, pa_token=None, local_file=None):
+        pa_token = pa_token or self.envs.get("GIT_TOKEN")
+        if not pa_token:
+            raise Exception("please specify the personal access token first")
 
-    def download_repo(self, branch=None, pa_token:str=None, download_location=None):
+        self._headers.update({
+            "Authorization": f"Bearer {pa_token}",
+            "Accept": "application/vnd.github+json",
+        })
+        _url = url_formatter(self.git_api_base_url, "repos", self._user, self._repo, "zipball", branch)
+        print(f"# => Downloading private repo with URL: {_url=}")
 
-        if not branch:
-            branch = "main"
+        return download_file(_url, local_file, headers=self._headers)
 
-        if not self._is_public:
-            if not pa_token:
-                pa_token = self.envs.get("GIT_TOKEN")
+    def download_repo(self, branch=None, pa_token: str = None, download_location=None):
 
-            if not pa_token:
-                raise Exception("please specify the personal access token first")
-
-            self._headers['Authorization'] = f"Bearer {pa_token}"
-
-        if not download_location:
-            download_location = self.TEMP_FILE_LOCATION
-
-        utils.create_directory(download_location)
-        local_file = utils.path_joiner(download_location, (self._repo + self.FILE_EXTENSION))
-        if self._is_public:
+        branch = branch or "main"
+        download_location = download_location or self.TEMP_FILE_LOCATION
+        create_directory(download_location)
+        local_file = path_joiner(download_location, f"{self._repo}{self.FILE_EXTENSION}")  # /tmp/.cicd/repo.zip
+        if self.is_public:
             zip_file = self.download_public_repo(branch=branch)
-
         else:
-            self._headers['Accept'] = "application/vnd.github+json"
-            download_args = ("repos", self._user, self._repo, "zipball", branch)
-            url = utils.url_joiner(self.base_url, *download_args)
-            zip_file = utils.download_file(url, local_file, headers=self._headers)
-        self.__file_handling(zip_file)
+            zip_file = self.download_private_repo(branch=branch, pa_token=pa_token, local_file=local_file)
 
+        self.__file_handling(zip_file)
 
     def __file_handling(self, zip_file):
         # Unzipping files
-        ultimate_file = utils.unzip(zip_file, parent_dir=zip_file.parent)
+        ultimate_file = unzip(zip_file)
 
         # move the child directory the similar to `mv .cicd/repo/repo_xyxd123 .cicd/repo1`
-        __temp_file = str(utils.path_joiner(self.TEMP_FILE_LOCATION, "repo1"))
-        utils.move_files(f"{str(ultimate_file)}/*", __temp_file)
+        temp_repo_dir = str(path_joiner(self.TEMP_FILE_LOCATION, "repo_temp"))
+        move_files(f"{str(ultimate_file)}/*", temp_repo_dir)
 
         # cleanup the file
-        [utils.cleanup_file(item) for item in [zip_file, ultimate_file]]
+        [cleanup_file(item) for item in [zip_file, ultimate_file]]
 
         # change the repo1 to the actual name of the repo
-        utils.move_files(__temp_file, str(utils.path_joiner(self.TEMP_FILE_LOCATION, ultimate_file.stem)))
+        move_files(temp_repo_dir, str(path_joiner(self.TEMP_FILE_LOCATION, ultimate_file.stem)))
 
 
-gg = GitPy("https://github.com/Vortexdude/DockCraft")
-gg.download_repo(branch="master")
+# gg = GitPy("https://github.com/Vortexdude/dockcraft")
+# gg.download_repo(branch="master")
