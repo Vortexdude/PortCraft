@@ -14,6 +14,9 @@ def run_module():
     )
 
     module = Crafter(module_args=_args)
+    # if module.params['action'] == "checkout":
+    #     print("checking out the repo")
+
     module.exit(**_result)
 
 

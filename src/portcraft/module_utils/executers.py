@@ -19,7 +19,7 @@ def _find_module(module):
 _mod = _find_module(module)
 
 new_args = {
-    "action": "create",
+    "action": "checkout",
     "repo": "DockCraft",
     "branch": "master",
     "commit": "No",  # Example: adding a new key
@@ -29,4 +29,4 @@ path = _mod[0]
 
 searcher = Transformer(path, "Crafter")
 new_data = searcher.modify_args(module_args=new_args)
-searcher.run_module(new_data)
+# searcher.run_module(new_data)

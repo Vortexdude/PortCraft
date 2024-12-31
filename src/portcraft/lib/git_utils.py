@@ -1,13 +1,7 @@
-from cloudhive.utils import url_joiner, path_joiner, load_env_vars, download_file, move_files, cleanup_file, unzip, \
-    create_directory
 import requests
-import os
-
-def url_formatter(base_url, *args) -> str:
-    return url_joiner(base_url, *args)
-
-def rename_file(source, dest):
-    os.rename(source, dest)
+from portcraft.exceptions import MissingTokenError
+from portcraft.lib.common import url_formatter, rename_file
+from cloudhive.utils import path_joiner, load_env_vars, download_file, move_files, cleanup_file, unzip, create_directory
 
 
 class Git(object):
@@ -63,7 +57,7 @@ class GitPy(Git):
     def download_private_repo(self, branch, pa_token=None, local_file=None):
         pa_token = pa_token or self.envs.get("GIT_TOKEN")
         if not pa_token:
-            raise Exception("please specify the personal access token first")
+            raise MissingTokenError()
 
         self._headers.update({
             "Authorization": f"Bearer {pa_token}",

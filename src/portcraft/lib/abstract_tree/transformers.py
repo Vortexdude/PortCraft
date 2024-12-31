@@ -16,6 +16,23 @@ class TargetNodeVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+
+def extract_keywords(node):
+    if not isinstance(node, ast.Call):
+        raise Exception("Provided node is not Callable")
+    keywords = {}
+    for keyword in node.keywords:
+        if keyword.arg is not None:
+            try:
+                value = ast.literal_eval(keyword.value)
+            except ValueError:
+                value = keyword.value
+            print(f"{keyword.arg=}")
+            print(f"{value=}")
+            keywords[keyword] = value
+
+    return keywords
+
 class CraftModifier(ast.NodeTransformer):
     def __init__(self, upper, modify_data):
         self.upper = upper
@@ -23,7 +40,14 @@ class CraftModifier(ast.NodeTransformer):
 
     def visit_Call(self, node):
         if isinstance(node.func, ast.Name) and node.func.id == self.upper.search_class:
+            data = extract_keywords(node)
+            print(dict(data))
+            # params = ast.keyword(
+            #     arg="params", value=dict_to_ast_node({"action": "checkout"})
+            # )
+            # node.keywords.append(params)
             for keyword in node.keywords:
+                # print(ast.dump(node))
                 if keyword.arg == list(self.modify_args.keys())[0]:
                     keyword.value = dict_to_ast_node(list(self.modify_args.values())[0])
 
@@ -60,7 +84,6 @@ class Transformer:
     @add_missing_attribute
     def modify_args(self, **kwargs):
         """Moodify the node attributes"""
-
         modify = CraftModifier(self, kwargs)
         return modify.visit(self.tree)
 

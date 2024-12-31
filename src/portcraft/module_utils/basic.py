@@ -1,14 +1,12 @@
-class Crafter(object):
-    def __init__(self, module_args=None):
-        self.module_args: dict = module_args # that will be required in yaml
-        print(f"{self.module_args=}")
-        self._params = None
+import sys
 
-    @property
-    def params(self):
-        return self._params
+class Crafter(object):
+    def __init__(self, module_args=None, params=None):
+        self.module_args: dict = module_args # that will be required in yaml
+        self.params = params
+
 
     @staticmethod
     def exit(**kwargs):
-        if 'message' in kwargs:
-            return kwargs['message']
+        print(kwargs)
+        sys.exit(0)
