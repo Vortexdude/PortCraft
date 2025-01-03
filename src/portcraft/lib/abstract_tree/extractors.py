@@ -1,14 +1,4 @@
 import ast
-from functools import wraps
-
-
-def add_missing_attribute(func):
-    @wraps(func)
-    def wrapper(self, **kwargs):
-        response = func(self, **kwargs)
-        ast.fix_missing_locations(response)
-        return response
-    return wrapper
 
 
 class Extractor:

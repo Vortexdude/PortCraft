@@ -1,5 +1,5 @@
 import ast
-from .extractors import add_missing_attribute
+from .converters import add_missing_attribute, dict_to_ast_node
 from cloudhive.utils import basename
 
 
@@ -16,7 +16,6 @@ class TargetNodeVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-
 def extract_keywords(node):
     if not isinstance(node, ast.Call):
         raise Exception("Provided node is not Callable")
@@ -27,11 +26,10 @@ def extract_keywords(node):
                 value = ast.literal_eval(keyword.value)
             except ValueError:
                 value = keyword.value
-            print(f"{keyword.arg=}")
-            print(f"{value=}")
             keywords[keyword] = value
 
     return keywords
+
 
 class CraftModifier(ast.NodeTransformer):
     def __init__(self, upper, modify_data):
@@ -41,29 +39,11 @@ class CraftModifier(ast.NodeTransformer):
     def visit_Call(self, node):
         if isinstance(node.func, ast.Name) and node.func.id == self.upper.search_class:
             data = extract_keywords(node)
-            print(dict(data))
-            # params = ast.keyword(
-            #     arg="params", value=dict_to_ast_node({"action": "checkout"})
-            # )
-            # node.keywords.append(params)
             for keyword in node.keywords:
-                # print(ast.dump(node))
                 if keyword.arg == list(self.modify_args.keys())[0]:
                     keyword.value = dict_to_ast_node(list(self.modify_args.values())[0])
 
         return self.generic_visit(node)
-
-
-def dict_to_ast_node(parsed_data: dict):
-    if isinstance(parsed_data, dict):
-        return ast.Dict(
-            keys=[ast.Constant(key) for key in parsed_data.keys()],
-            values=[dict_to_ast_node(value) for value in parsed_data.values()]
-        )
-    elif isinstance(parsed_data, str) or isinstance(parsed_data, bool):
-        return ast.Constant(parsed_data)
-    else:
-        raise ValueError(f"Unsupported Type {type(parsed_data)}")
 
 
 class Transformer:
@@ -71,6 +51,11 @@ class Transformer:
         self.file_path = file_path
         self.search_class = search_class
         self.tree = self._parse_file()
+        self.find_attrs = []
+
+    def find_import_class(self, class_name):
+        self.find_attrs.append({class_name: ast.ImportFrom})
+
 
     def _parse_file(self):
         with open(self.file_path, 'r') as f:
@@ -91,9 +76,9 @@ class Transformer:
         exec_globals = {"__name__": "__main__", "__builtins__": __builtins__, "__file__": basename(self.file_path)}
 
         for node in ast.iter_child_nodes(module):
-            if isinstance(node, ast.ImportFrom):
-                print(node.module)
-                if node.names[0].name == "Crafter":
+            for item in self.find_attrs:
+                key, value = next(iter(item.items()))
+                if isinstance(node, value) and node.names[0].name == key:
                     print("Crafter imported")
                     from portcraft.module_utils.basic import Crafter
                     exec_globals['Crafter'] = Crafter
