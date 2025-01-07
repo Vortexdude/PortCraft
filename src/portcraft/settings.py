@@ -21,7 +21,11 @@ class Paths:
 
     @property
     def cicd_file(self):
-        return self._cicd_file
+        for item in [self._home_path, self.home_path.parent.parent]:
+            path = item / CICD_PATH / CICD_FILE_NAME
+            if path.exists():
+                return path
+        return None
 
     @property
     def library_paths(self):

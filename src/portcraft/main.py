@@ -2,15 +2,12 @@
 PORTCRAFT a Custom CICD tool
 that's configuration is defined in the yaml file
 """
-import os
-import importlib
-import sys
-from importlib.machinery import SourceFileLoader
-from cloudhive import utils
-from portcraft.models import Module, Stage
-from portcraft.utils  import import_module
-from portcraft.settings import paths
 
+from cloudhive import utils
+from portcraft.models import Stage, Module
+from portcraft.settings import paths
+from portcraft.lib.common import find_module_path
+from portcraft.lib.abstract_tree.transformers import Transformer
 
 class Extractor(object):
     def __init__(self, config):
@@ -35,47 +32,28 @@ class Crafter(Extractor):
         for stage in self.stages:
             print(f"=> Inside {stage.name}")
             for module in stage.modules:
-                ModuleClass = import_module(module.name)
-                # ModuleClass(module.arguments)
+                print(f"=> Running {module.name}")
+                self.stage_runner(module)
 
+
+    @staticmethod
+    def stage_runner(module: Module):
+        module_path = find_module_path(module.name.lower())[0]
+        trs_obj = Transformer(module_path, "Crafter")
+        module_data = trs_obj.modify_args(kwargs=module.arguments)
+        trs_obj.run_module(module_data)
 
 
 def main(config):
-    # craft = Extractor(config)
     craft = Crafter(config)
     craft.run()
 
 
-class ModuleRunner:
-    def __init__(self, lib_dir):
-        self.lib_dir = lib_dir
-
-    def get_python_files(self):
-        return [f for f in os.listdir(self.lib_dir) if f.endswith(".py") and f != "__init__.py"]
-
-
-    def import_module(self, file_path):
-        module_name = os.path.splitext(os.path.basename(file_path))[0]
-        loader = SourceFileLoader(module_name, file_path)
-        spec = importlib.util.spec_from_loader(module_name, loader)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
-        print(module.__dict__)
-        # module.main()
-
-    def run(self):
-        for file in self.get_python_files():
-            filepath = os.path.join(self.lib_dir, file)
-            try:
-                self.import_module(filepath)
-            except:
-                continue
-
-
-
 if __name__ == "__main__":
 
-    # data = utils.load_yml(paths.cicd_file)
-    # main(data)
-    search_path = paths._library_paths[0]
-    ModuleRunner(search_path).run()
+    data = utils.load_yml(paths.cicd_file)
+    if not data:
+        raise Exception("Cant find the config file.")
+
+    main(data)
+
