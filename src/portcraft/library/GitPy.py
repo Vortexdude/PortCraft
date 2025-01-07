@@ -16,9 +16,9 @@ def run_module():
     module = Crafter(module_args=_args)
     if module.params['branch'] == "master":
         print("it will only trigger with master branch")
-    # print(module.params['branch'])
-    # module.exit(**_result)
 
+    module.exit(_result)
 
 if __name__ == "__main__":
     run_module()
+

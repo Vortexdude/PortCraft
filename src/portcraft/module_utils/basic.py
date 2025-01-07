@@ -1,4 +1,3 @@
-
 import sys
 
 
@@ -46,6 +45,6 @@ class Crafter(Validator):
         self.params = {}
 
     @staticmethod
-    def exit(**kwargs):
+    def exit(kwargs):
         print(kwargs)
-        sys.exit(0)
+        # sys.exit(0)
