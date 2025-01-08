@@ -46,5 +46,5 @@ class Crafter(Validator):
 
     @staticmethod
     def exit(kwargs):
-        print(kwargs)
+        return kwargs
         # sys.exit(0)

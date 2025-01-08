@@ -64,3 +64,9 @@ class Module(Model):
     @property
     def arguments(self):
         return self._args
+
+    @property
+    def register(self):
+        if 'register' in self.attrs:
+            return self.attrs.get('register')
+        return None

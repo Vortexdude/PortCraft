@@ -44,7 +44,7 @@ class Transformer:
     modify specific class attributes, and execute the modified module.
     """
 
-    def __init__(self, file_path, search_class):
+    def __init__(self, file_path, search_class="Crafter"):
         """
         Initialize the Transformer instance.
 

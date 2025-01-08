@@ -6,6 +6,7 @@
           action: checkout
           repo: https://github.com/vortexdude/Dockcraft
           branch: master
+        register: var1
 
       - name: ping google
         Bash:

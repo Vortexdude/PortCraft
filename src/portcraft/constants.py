@@ -1,12 +1,7 @@
-import requests
 import os
-
 
 _GIT_DEFAULT_BRANCH = "main"
 _GIT_API_BASE_URL = "https://api.github.com"
-
-# res = requests.get("https://api.github.com/repos/Vortexdude/DockCraft")
-
 
 class ConfigManager(object):
     def __init__(self, conf_file=None):
@@ -46,11 +41,3 @@ chars = dict(
 def test_print_chars():
     for c in list(map(str, "abcdefghijklmnopqrstuvwxyz")):
         print(chars[c.upper()])
-
-
-def console_domino(text):
-    text = text.upper()
-    b=list(map(str, text))
-    char_lists = [chars[item].split("\n") for item in b]
-    result = "\n".join(["  ".join(elements) for elements in zip(*char_lists)])
-    return result

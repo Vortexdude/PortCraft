@@ -1,33 +1,37 @@
-import ast
+from portcraft.models import Stage
 
 
-class Extractor:
-    def __init__(self, struc):
-        self.tree = struc
-        self._functions = []
-        self._classes = []
-        self.run()
+class Extractor(object):
+    def __init__(self, config):
+        self.__conf = config
+        self._stages = self._extract('stages')
+
+
+    def _extract(self, name: str):
+        """
+        Extract the specified key from the configuration data.
+
+        Args:
+            name (str): Key to extract from the configuration.
+
+        Returns:
+            dict or list: Extracted value or an empty list if not found.
+        """
+        if isinstance(self.__conf, dict) and name in self.__conf:
+            return self.__conf[name]
+        if isinstance(self.__conf, list):
+            return self.__conf[0].get(name, [])
+        return []
 
     @property
-    def functions(self):
-        return self._functions
+    def stages(self):
+        """
+        Prepare stages from the configuration data.
 
-    @property
-    def classes(self):
-        return self._classes
-
-    @staticmethod
-    def show_info(function_node):
-        """Same goes for the class methods as well"""
-
-        print(f"Function Name: {function_node.name}")
-        print(f"args: ")
-        for arg in function_node.args.args:
-            print("\tParameter name:", arg.arg)
-
-    def run(self):
-        for n in self.tree.body:
-            if isinstance(n, ast.FunctionDef):
-                self._functions.append(n)
-            elif isinstance(n, ast.ClassDef):
-                self._classes.append(n)
+        Returns:
+            list: List of stage objects.
+        """
+        return [
+            Stage.prepare_model(attrs={"name": name, "args": value})
+            for name, value in self._stages.items()
+        ]
