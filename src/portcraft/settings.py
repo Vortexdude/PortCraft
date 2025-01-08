@@ -1,9 +1,18 @@
 from pathlib import Path
+import os
+
+def terminal_size() -> int:
+    try:
+        return os.get_terminal_size().columns
+    except OSError:
+        return 90 # fixed length
+
 
 CICD_PATH = "./.cicd"
 CICD_FILE_NAME = "main.yml"
 TMP_DIR = "/tmp/.cicd"
 LIBRARY_PATHS = ["portcraft/library"]
+SCREEN_WIDTH = terminal_size()
 
 
 class Paths:

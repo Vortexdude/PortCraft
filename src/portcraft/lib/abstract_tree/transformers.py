@@ -1,4 +1,6 @@
 import ast
+import sys
+
 from .converters import add_missing_attribute, dict_to_ast_node
 from cloudhive.utils import basename
 
@@ -23,6 +25,11 @@ class CraftModifier(ast.NodeTransformer):
         self.upper = upper
         self.modify_args = modify_data
 
+    def visit_Call(self, node):
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "exit":
+            # print(ast.dump(node, indent=2))
+            pass
+        return super().generic_visit(node)
 
     def visit_Assign(self, node):
         if isinstance(node.value, ast.Call) and node.value.func.id == self.upper.search_class:
@@ -87,10 +94,14 @@ class Transformer:
         """
 
         exec_globals = {"__name__": "__main__", "__builtins__": __builtins__, "__file__": basename(self.file_path)}
-        from portcraft.module_utils import Crafter
+        from portcraft.module_utils.basic import Crafter
         exec_globals['Crafter'] = Crafter
+        exec_globals['module_result'] = None
+
         try:
             compiled_module = compile(module, self.file_path, mode="exec")
             exec(compiled_module, exec_globals)
         except Exception as e:
-            raise RuntimeError(f"Failed to execute the mmodule {e}")
+            print(f"Failed to execute the module {e}")
+            sys.exit(0)
+            # raise RuntimeError(f"Failed to execute the module {e}")

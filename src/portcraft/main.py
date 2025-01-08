@@ -5,9 +5,11 @@ that's configuration is defined in the yaml file
 
 from cloudhive import utils
 from portcraft.models import Stage, Module
-from portcraft.settings import paths
+from portcraft.settings import paths, SCREEN_WIDTH
 from portcraft.lib.common import find_module_path
 from portcraft.lib.abstract_tree.transformers import Transformer
+from portcraft.constants import console_domino
+
 
 class Extractor(object):
     def __init__(self, config):
@@ -26,13 +28,23 @@ class Extractor(object):
         return [Stage.prepare_model(attrs={"name": name, "args": value}) for name, value in self._stages.items()]
 
 
+def task_console(module: Module):
+    output = f"\nMODULE [{module.name}] "
+    if module.metadata:
+        output += module.metadata + " "
+    _remaining_dots = SCREEN_WIDTH - int(len(module.metadata)) - int(len(module.name))
+    output += "." * _remaining_dots
+    return output
+
+
 class Crafter(Extractor):
 
     def run(self):
         for stage in self.stages:
-            print(f"=> Inside {stage.name}")
+            print(console_domino(stage.name))
             for module in stage.modules:
-                print(f"=> Running {module.name}")
+                output = task_console(module)
+                print(output)
                 self.stage_runner(module)
 
 
@@ -50,10 +62,8 @@ def main(config):
 
 
 if __name__ == "__main__":
-
     data = utils.load_yml(paths.cicd_file)
     if not data:
         raise Exception("Cant find the config file.")
 
     main(data)
-
