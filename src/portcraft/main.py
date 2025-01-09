@@ -6,9 +6,11 @@ that's configuration is defined in the yaml file
 from cloudhive import utils
 from portcraft.settings import paths
 from portcraft.lib.common import find_module_path
-from portcraft.lib.abstract_tree.transformers import Transformer
+from portcraft.lib.display import Console
 from portcraft.lib.abstract_tree.extractors import Extractor
-from portcraft.lib.display import task_console, stage_bar
+from portcraft.lib.abstract_tree.transformers import Transformer
+
+console = Console()
 
 
 class Crafter(Extractor):
@@ -20,11 +22,12 @@ class Crafter(Extractor):
         Execute all stages and their modules.
         """
         for stage in self.stages:
-            print(stage_bar(stage.name))
+            console.stage_bar(stage.name)
             for module in stage.modules:
                 if module.register:
                     print("Saving the data to the variable . . .")
-                task_console(module)
+                console.task_bar(module)
+                # task_console(module)
                 self.stage_runner(module)
 
 

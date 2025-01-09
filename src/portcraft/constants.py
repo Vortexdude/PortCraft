@@ -9,6 +9,11 @@ class ConfigManager(object):
 
     data = "%s/base.yml" % os.path.dirname(__file__)
 
+
+task_display_mapping = dict(
+    default = "MODULE [{module_name}] {module_comment} {filler}"
+)
+
 chars = dict(
     A = "\n  ______\n /      \\\n/$$$$$$  |\n$$ |__$$ |\n$$    $$ |\n$$$$$$$$ |\n$$ |  $$ |\n$$ |  $$ |\n$$/   $$/ \n",
     B = "\n _______  \n/       \\ \n$$$$$$$  |\n$$ |__$$ |\n$$    $$< \n$$$$$$$  |\n$$ |__$$ |\n$$    $$/ \n$$$$$$$/ \n",

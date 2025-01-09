@@ -1,52 +1,45 @@
 from portcraft.settings import SCREEN_WIDTH
 from portcraft.models import Module
-from portcraft.constants import chars
+from portcraft.constants import chars, task_display_mapping
 
 
-def task_bar(module_name, module_metadata=None) -> str:
-    _output = f"\nMODULE [{module_name}] "
-    if module_metadata:
-        _output += f"{module_metadata} "
+class ConsoleFormatter:
+    def  __init__(self):
+        self.module_style: str = 'default'
+        self.number_of_dots: int = (SCREEN_WIDTH - 20) or 30
+        self.chars = chars
 
-    remaining_dots = SCREEN_WIDTH - 15 - len(module_metadata or "") - len(module_name)
-    _output += "." * max(remaining_dots, 0)
-    return _output
+    def _task_formatter(self, module_name, module_comment, style=None):
+
+        def total_dots(char="*"):
+            return char * (self.number_of_dots - len(module_comment or "") - len(module_name))
+
+        style = self.module_style if not style else style
+        unformatted_style = task_display_mapping.get(style)
+        formatted_text = unformatted_style.format(module_name=module_name,
+                                              module_comment=module_comment,
+                                              filler=total_dots())
+        return formatted_text
+
+    def _stage_formatter(self, name):
+        # convert the text to upper case
+        text = name.upper()
+
+        # convert text to list
+        b = list(map(str, text))
+
+        # get the ASCII ART value of the character and split it with "/n"
+        char_lists = [self.chars[item].split("\n") for item in b]
+
+        # merge the first each first line with each character and add new line character at the end
+        result = "\n".join(["  ".join(elements) for elements in zip(*char_lists)])
+        return result + "\n"
 
 
-def task_console(module: Module) -> str:
-    """
-    Generate console output for a module.
+class Console(ConsoleFormatter):
 
-    Args:
-        module (Module): The module object to display.
+    def task_bar(self, module: Module, style=None):
+        print(super()._task_formatter(module.name, module.metadata, style))
 
-    Returns:
-        str: Formatted console string for the module.
-    """
-    output = task_bar(module.name, module.metadata)
-    print(output)
-
-
-
-def stage_bar(stage: str) -> str:
-    """
-    Print the State Grafity
-    it will automatically convert from lower case to uppercase
-    Args:
-        stage (str): The text to display.
-
-    Returns:
-        str: Formatted console string for the module.
-    """
-    # convert the text to upper case
-    text = stage.upper()
-
-    # convert text to list
-    b=list(map(str, text))
-
-    # get the ASCII ART value of the character and split it with "/n"
-    char_lists = [chars[item].split("\n") for item in b]
-
-    # merge the first each first line with each character and add new line character at the end
-    result = "\n".join(["  ".join(elements) for elements in zip(*char_lists)])
-    return result + "\n"
+    def stage_bar(self, name):
+        print(super()._stage_formatter(name))
