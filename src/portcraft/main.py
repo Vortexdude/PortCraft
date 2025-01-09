@@ -5,8 +5,8 @@ that's configuration is defined in the yaml file
 
 from cloudhive import utils
 from portcraft.settings import paths
-from portcraft.lib.common import find_module_path
 from portcraft.lib.display import Console
+from portcraft.lib.common import find_module_path
 from portcraft.lib.abstract_tree.extractors import Extractor
 from portcraft.lib.abstract_tree.transformers import Transformer
 
@@ -27,7 +27,6 @@ class Crafter(Extractor):
                 if module.register:
                     print("Saving the data to the variable . . .")
                 console.task_bar(module)
-                # task_console(module)
                 self.stage_runner(module)
 
 

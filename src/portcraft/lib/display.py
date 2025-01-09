@@ -1,6 +1,35 @@
 from portcraft.settings import SCREEN_WIDTH
 from portcraft.models import Module
 from portcraft.constants import chars, task_display_mapping
+from string import Template
+
+class BaseStringTemplate(Template):
+    delimiter = "$" # you can overwrite for use the different delimiter
+
+    def safe_loads(self, mapping=None, **kwargs):
+        """
+        Perform substitution, using a default value for missing placeholders.
+
+        Args:
+            mapping (dict, optional): A dictionary with values for substitution.
+            **kwargs: Additional keyword arguments for substitution.
+
+        Returns:
+            str: The resulting string after substitution.
+        """
+        if mapping is None:
+            mapping = {}
+
+        combine_dict = {**mapping, **kwargs}
+
+        # create a defaultdict for pass the missing key in the format
+        class DefaultDict(dict):
+            def __missing__(self, key):
+                # return f"<{key}>"
+                return ""
+
+        safe_mappings = DefaultDict(combine_dict)
+        return self.safe_substitute(safe_mappings)
 
 
 class ConsoleFormatter:
@@ -16,9 +45,13 @@ class ConsoleFormatter:
 
         style = self.module_style if not style else style
         unformatted_style = task_display_mapping.get(style)
-        formatted_text = unformatted_style.format(module_name=module_name,
-                                              module_comment=module_comment,
-                                              filler=total_dots())
+        injected_data = dict(
+            module_name=module_name,
+            module_comment=module_comment,
+            filler=total_dots()
+        )
+        formatted_text = BaseStringTemplate(unformatted_style).safe_loads(injected_data)
+
         return formatted_text
 
     def _stage_formatter(self, name):

@@ -1,23 +1,8 @@
 import ast
 import sys
-
 from .converters import add_missing_attribute, dict_to_ast_node
 from cloudhive.utils import basename
 
-
-def call_method(instance_name, method, data: dict | None = None):
-    return ast.Expr(
-        value=ast.Call(
-            func=ast.Attribute(
-                value=ast.Name(
-                    id=instance_name, ctx=ast.Load()
-                ),
-                attr=method,
-                ctx=ast.Load()
-            ),
-            args=[dict_to_ast_node(data)]
-        )
-    )
 
 
 class CraftModifier(ast.NodeTransformer):
@@ -25,18 +10,55 @@ class CraftModifier(ast.NodeTransformer):
         self.upper = upper
         self.modify_args = modify_data
 
+    def visit_Module(self, node):
+        init_dict = self._create_dict_initialization("RESULT")
+        node.body.insert(0, init_dict)
+        return self.generic_visit(node)
+
+
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute) and node.func.attr == "exit":
-            # print(ast.dump(node, indent=2))
             pass
-        return super().generic_visit(node)
+        return self.generic_visit(node)
 
     def visit_Assign(self, node):
-        if isinstance(node.value, ast.Call) and node.value.func.id == self.upper.search_class:
-            instance_name = node.targets[0].id
-            val_line = call_method(instance_name, "validate", self.modify_args)
-            return [node, val_line]
-        return node
+        if isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name):
+            if node.value.func.id == self.upper.search_class:
+                instance_name = node.targets[0].id
+                validation_node = self._create_method_call(instance_name, "validate", self.modify_args)
+                return [node, validation_node]
+        return self.generic_visit(node)
+
+    @staticmethod
+    def _create_dict_initialization(name):
+        return ast.Assign(
+            targets=[ast.Name(id=name,ctx=ast.Store())],
+            value=ast.Dict()
+        )
+
+    @staticmethod
+    def _store_global_variable(name, ref_node):
+        return ast.Assign(
+            targets=[ast.Name(id=name, ctx=ast.Store())],
+            value=ast.Name(id=name, ctx=ast.Load()),
+            lineno=ref_node.lineno,
+            col_offset=ref_node.col_offset
+        )
+
+    @staticmethod
+    def _create_method_call(instance_name, method, data):
+        return ast.Expr(
+            value=ast.Call(
+                func=ast.Attribute(
+                    value=ast.Name(
+                        id=instance_name, ctx=ast.Load()
+                    ),
+                    attr=method,
+                    ctx=ast.Load()
+                ),
+                args=[dict_to_ast_node(data)]
+            )
+        )
 
 class Transformer:
     """

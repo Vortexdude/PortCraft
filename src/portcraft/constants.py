@@ -11,7 +11,7 @@ class ConfigManager(object):
 
 
 task_display_mapping = dict(
-    default = "MODULE [{module_name}] {module_comment} {filler}"
+    default = "MODULE [$module_name] $module_comment $filler"
 )
 
 chars = dict(

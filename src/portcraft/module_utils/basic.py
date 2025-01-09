@@ -1,6 +1,3 @@
-import sys
-
-
 class Validator:
     def validate(self, yaml_args: dict):
         """
@@ -26,7 +23,6 @@ class Validator:
                     print(f"Optional Argument '{key}' not provided so skipping ... ")
                     continue
 
-
             value = yaml_args[key]
             expected_type = constrain['type']
             if expected_type and type(value) != expected_type:
@@ -41,10 +37,10 @@ class Validator:
 
 class Crafter(Validator):
     def __init__(self, module_args=None):
-        self.module_args: dict = module_args # that will be required in yaml
+        self.module_args: dict = module_args  # that will be required in yaml
         self.params = {}
+        self.result = {}
 
-    @staticmethod
-    def exit(kwargs):
-        return kwargs
+    def exit(self, kwargs):
+        self.result =  kwargs
         # sys.exit(0)
