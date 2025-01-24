@@ -1,52 +1,26 @@
-from pathlib import Path
 import os
+from dotenv import load_dotenv
+from portcraft.lib._pathlib import Paths, PathUtils
+
+SUPPORTED_EXTENSIONS = [".yaml", "yaml", ".json", ".py"]
+CICD_PATH = "./.cicd"
+CICD_FILE_NAME = "main.yml"
+TMP_DIR = "/tmp/.cicd"
+VAR_FILES = ["./vars.yml", "./all.json"]
+ENV_FILE = "./.env"
+LIBRARY_PATHS = ["portcraft/library"]
 
 def terminal_size() -> int:
     try:
         return os.get_terminal_size().columns
     except OSError:
-        return 90 # fixed length
+        return 90  # fixed length
 
-
-CICD_PATH = "./.cicd"
-CICD_FILE_NAME = "main.yml"
-TMP_DIR = "/tmp/.cicd"
-LIBRARY_PATHS = ["portcraft/library"]
 SCREEN_WIDTH = terminal_size()
 
-
-class Paths:
-    def __init__(self, home_dir: Path=None):
-        if not home_dir:
-            home_dir = Path(__file__).parent
-
-        self._home_path = home_dir
-        self._cicd_file = self._home_path / CICD_PATH / CICD_FILE_NAME
-        self._library_paths = [self._home_path.parent / path for path in LIBRARY_PATHS]
-
-    @property
-    def home_path(self):
-        return self._home_path
-
-    @property
-    def cicd_file(self):
-        for item in [self._home_path, self.home_path.parent.parent]:
-            path = item / CICD_PATH / CICD_FILE_NAME
-            if path.exists():
-                return path
-        return None
-
-    @property
-    def library_paths(self):
-        return self._library_paths
-
-    def lib_extractor(self):
-        __lib_path = []
-        for lib_path in self._library_paths:
-            _lib_path = str(lib_path).split(str(self._home_path))[1]
-            if str(lib_path).startswith("/"):
-                lib_path = _lib_path[1:].replace("/", ".")
-            __lib_path.append(lib_path)
-        return __lib_path
-
 paths = Paths()
+all_vars = PathUtils(paths.home_path).all_vars
+load_dotenv(dotenv_path=paths.env_file)
+
+def env(var) -> str:
+    return os.environ.get(var)

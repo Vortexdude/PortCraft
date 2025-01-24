@@ -22,11 +22,11 @@ class Crafter(Extractor):
         Execute all stages and their modules.
         """
         for stage in self.stages:
-            console.stage_bar(stage.name)
+            console.stage_bar(stage.name) # print the stage banner
             for module in stage.modules:
                 if module.register:
                     print("Saving the data to the variable . . .")
-                console.task_bar(module)
+                console.task_bar(module) # print the module result
                 self.stage_runner(module)
 
 
