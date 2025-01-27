@@ -19,7 +19,8 @@ def terminal_size() -> int:
 SCREEN_WIDTH = terminal_size()
 
 paths = Paths()
-all_vars = PathUtils(paths.home_path).all_vars
+pu = PathUtils(paths.home_path.parent)
+all_vars = pu.all_vars
 load_dotenv(dotenv_path=paths.env_file)
 
 def env(var) -> str:

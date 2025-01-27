@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def _file_parser(filename, base_path=None) -> tuple[str]:
+def _file_parser(filename, base_path=None) -> str:
     if not base_path:
         slug = Path("../") / filename
     else:

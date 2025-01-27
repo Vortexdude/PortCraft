@@ -80,6 +80,7 @@ class PathUtils:
         self.home_dir = Path(home_dir) if not isinstance(home_dir, Path) else home_dir
         self.var_files = list(self.find_var_files())
         self.all_vars = extract_data(self.var_files)
+        self.library_paths = [self.home_dir / "library"]
 
     def find_var_files(self):
         """

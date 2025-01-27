@@ -1,27 +1,90 @@
+import importlib
+import json
 
 from yaml import safe_load
 from pathlib import Path
-from portcraft.settings import paths, env, all_vars
-from portcraft.lib.display import colier_console, default_console, minimal_console
+from portcraft.settings import paths, env, all_vars, pu
+from portcraft.lib.display import default_console
 from portcraft.lib.parser import _file_parser
 from cloudhive.utils import load_yml
+
+def exec_mod(library, method=None, data=None):
+    if data:
+        import sys
+        from io import StringIO
+
+        if isinstance(data, dict) or isinstance(data, list):
+            data = json.dumps(data)
+
+        sys.stdin = StringIO(data)
+
+    if not method:
+        method = "__main__"
+
+    m_spec = importlib.util.spec_from_file_location(method, library)
+    module = importlib.util.module_from_spec(m_spec)
+    m_spec.loader.exec_module(module)
+    return module
+
+
+def load_and_run_module(module_name: str, module_path=None, data=None):
+    if not module_name:
+        raise Exception("'Module_name', shouldn't be empty.")
+
+    if not module_path:
+        module_path = pu.library_paths[0]
+
+    if module_name.endswith(".py"):
+        library = module_path / module_name
+    else:
+        library = module_path / f"{module_name}.py"
+
+    return exec_mod(library, data=data)
 
 
 file = "test.yml"
 
-home_dir = paths.home_path
 
 class Explorer:
     def __init__(self, data):
+        """
+        Initialize the Explorer with the provided data.
+
+        :param data: A dictionary or list containing the configuration data.
+        """
         self.data = data
+        self.__stages = {}
+        self.__parse_stages()
 
     @classmethod
-    def load(cls, file):
+    def load(cls, file: str):
+        """
+        Load data from a YAML file and initialize the Explorer.
+
+        :param file: Path to the YAML file.
+        :return: An instance of Explorer initialized with the loaded data.
+        """
         return cls(load_yml(file))
 
-    def get_stages(self) -> dict:
-        if 'stages' in self.data:
-            return self.data.get('stages', {})
+    @property
+    def stages(self) -> dict:
+        """
+        Get the stages data parsed from the input.
+
+        :return: A dictionary of stages.
+        """
+        return self.__stages
+
+    def __parse_stages(self):
+        if isinstance(self.data, list) and self.data:
+            stage_data = self.data[0].get('stages', {})
+        elif isinstance(self.data, dict):
+            stage_data = self.data.get('stages', {})
+
+        # Update the internal stages dictionary if data exists
+        if stage_data:
+            self.__stages.update(stage_data)
+
 
 class Module:
     def __init__(self, attrs):
@@ -41,7 +104,6 @@ class Module:
                 self._module_args = value
             else:
                 self._plugins[key] = value
-
 
     @property
     def comment(self) -> str:
@@ -68,13 +130,13 @@ class TaskPacker:
         self._vars = vars
         self._comment = module_comment
 
+
     def run(self):
-        # find the module in the module directory
-        # inject the data into the module
         for plugin_name, plugin_args in self._plugins.items():
             print(f"Discovering plugin '{plugin_name}' with arg '{plugin_args}'")
 
         print(default_console.inject(module_name=self._name, module_comment=self._comment))
+        load_and_run_module(self._name, data=self._args)
 
 
 class Blueprint:
@@ -87,7 +149,7 @@ class Blueprint:
         filepath = _file_parser(filename)
         explorer = Explorer.load(filepath)
         # loader = explorer.data
-        stages = explorer.get_stages()
+        stages = explorer.stages
         for stage_name, stage_data in stages.items():
             print(f"running {stage_name}")
             for module in stage_data:
@@ -100,26 +162,6 @@ class Blueprint:
                     module_comment=mk.comment
                 )
                 task.run()
-
-
-        # if stages:
-        #     for stage_name, stage_data in stages.items():
-        #         if isinstance(stage_data, list):
-        #             for module in stage_data:
-        #                 print(module)
-
-
-            # stages = data['stages']
-            # if isinstance(stages, dict):
-                # for name, item in stages.items():
-                #     print(f"=> STAGE [{name}]")
-                #     if isinstance(item, list):
-                #         for module in item:
-                #             if "name" in module:
-                #                 print(f"Comment => {module['name']}")
-                #                 del module['name']
-                #             module_name, module_data = next(iter(module.items()))
-                #             print(module_name, module_data)
 
 
 
