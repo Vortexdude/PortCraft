@@ -1,10 +1,10 @@
 import json
 import sys
-from io import StringIO
+from io import StringIO, UnsupportedOperation
 
 
 class Validator:
-    def validate(self, yaml_args: dict):
+    def validate_module_args(self, yaml_args: dict):
         """
         Validate the YAML arguments against the user-defined argument constraints.
 
@@ -16,6 +16,7 @@ class Validator:
             KeyError: If a required argument is missing in the YAML data.
             Exception: If a required parameter is missing or has an invalid value.
         """
+
         unsupported_args = [arg for arg in yaml_args.keys() if arg not in self.module_args]
         if unsupported_args:
             raise KeyError(f"Argument: '{unsupported_args}' not supported by the module")
@@ -37,16 +38,22 @@ class Validator:
             if constrain.get('required', False) and not value:
                 raise ValueError(f"Parameter '{key}' is required but has no value.")
 
-            self.params[key] = value
 
-
-class Crafter:
+class Crafter(Validator):
     def __init__(self, module_args=None):
         self.module_args: dict = module_args  # that will be required in yaml
         self.params = self._load_params()
+        self.__setup()
         self.result = {}
         self._validate()
 
+
+    def __setup(self):
+        try:
+            self.validate_module_args(self.params)
+        except ValueError as e:
+            print(e)
+            sys.exit(13)
 
     def _validate(self):
         for arg, spec in self.module_args.items():
@@ -61,6 +68,8 @@ class Crafter:
             raw_data.seek(0)
             json_string = raw_data.read()
             return json.loads(json_string)
+        except UnsupportedOperation:
+            self.fail_json(msg="Cant run Standalone file need to be by the tool itself", code=256)
 
         except json.JSONDecodeError:
             self.fail_json(msg="Invalid JSON input")
@@ -68,9 +77,13 @@ class Crafter:
 
     def exit(self, kwargs):
         self.result =  kwargs
-        # sys.exit(0)
+        sys.exit(0)
 
     def validate(self): pass
-    def fail_json(self, **kwargs):
+
+    @staticmethod
+    def fail_json(**kwargs):
         msg = kwargs.get('msg', "")
-        print("ERROR - > ", msg)
+        code = kwargs.get("code", 0)
+        print(f"ERROR {code} - > ", msg)
+        sys.exit(code)
