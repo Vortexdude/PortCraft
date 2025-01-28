@@ -1,29 +1,24 @@
 import os
-from cloudhive.utils import basename, url_joiner
-from portcraft.settings import paths
+from cloudhive.utils import url_joiner
+from portcraft.settings import pu
 
 
-def find_module_path(module):
-    module_paths = []
-    for library_path in  paths.library_paths:
-        module_path = find_file_path(library_path, module)
-        if module_path:
-            module_paths.append(module_path)
-
-    if not module_paths:
-        raise Exception(f"No module found {module} in {paths.library_paths}")
-
-    return module_paths
+def search_file(_dir, file):
+    _file_path = os.path.join(_dir, file)
+    if os.path.isfile(_file_path):
+        return _file_path
+    return False
 
 
-def find_file_path(_lib_path, module):
-    for file in _lib_path.glob("*"):
-        if ".py" not in module:
-            module = f"{module}.py"
+def find_module_file(mod_name: str, search_path=None):
+    if not search_path:
+        search_path = pu.library_paths
 
-        if basename(file).lower() == module:
-            return file
-    return []
+    for item in search_path:
+        _full_path = search_file(item, f"{mod_name}.py")
+        if _full_path:
+            return _full_path
+    return None
 
 
 def url_formatter(base_url, *args) -> str:

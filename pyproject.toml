@@ -1,13 +1,13 @@
 [build-system]
-requires = ["setuptools>=75.0", "wheel"]
 build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
 
 [project]
 name = "portcraft"
 description = "A simple CICD tool"
 readme = "README.md"
 keywords = ["cicd", "automation", "tools"]
-
+version = "1.0.0"
 
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -16,17 +16,5 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 
-dynamic = ["version", "dependencies"]
-
 [tool.setuptools.dynamic]
-version = {attr = "src.release.__version__"}
-dependencies = {file = "requirements.txt"}
-
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-prtcraft = [
-    ".cicd/main.yml"
-]
+dependencies = {file = ["requirements.txt"]}
