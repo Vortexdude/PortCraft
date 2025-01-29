@@ -1,59 +1,70 @@
-"""
-PORTCRAFT a Custom CICD tool
-that's configuration is defined in the yaml file
-"""
+import sys
+import time
+from portcraft.lib.blueprints import Blueprint
 
-from cloudhive import utils
-from portcraft.settings import paths
-from portcraft.lib.display import Console
-from portcraft.lib.common import find_module_path
-from portcraft.lib.abstract_tree.extractors import Extractor
-from portcraft.lib.abstract_tree.transformers import Transformer
+# _file = "test.yml"
 
-console = Console()
+# bp = Blueprint(filename=_file)
+# bp.run()
 
 
-class Crafter(Extractor):
-    """
-    Orchestrates the execution of stages and modules defined in the configuration.
-    """
-    def run(self):
-        """
-        Execute all stages and their modules.
-        """
-        for stage in self.stages:
-            console.stage_bar(stage.name) # print the stage banner
-            for module in stage.modules:
-                if module.register:
-                    print("Saving the data to the variable . . .")
-                console.task_bar(module) # print the module result
-                self.stage_runner(module)
 
 
-    @staticmethod
-    def stage_runner(module):
-        module_path = find_module_path(module.name.lower())[0]
-        transformer = Transformer(module_path, "Crafter")
-        modified_ast = transformer.modify_args(kwargs=module.arguments)
-        transformer.run_module(modified_ast)
 
 
-def main(config):
-    """
-    Main function to initialize and run the Crafter with the given configuration.
-
-    Args:
-        config (dict): Configuration data.
-    """
-    craft = Crafter(config)
-    craft.run()
+def is_odd(data: int | str):
+    if isinstance(data, str):
+        data = len(data)
+    if data % 2:
+        return True
+    return False
 
 
-if __name__ == "__main__":
-    # Load the configuration file
-    config_data = utils.load_yml(paths.cicd_file)
-    if not config_data:
-        raise FileNotFoundError("Cannot find the config file.")
+def generate_banner(title, width=None):
+    if not width:
+        width = 50
+    _banner = ""
+    title_length = len(title)
+    if title_length >= width:
+        width = (title_length + 10)
 
-    # Execute the main function
-    main(config_data)
+    _is_width_odd = is_odd(width)
+    _is_title_odd = is_odd(title_length)
+    _face_border = f"+{'-' * (width - 2)}+\n"
+    _banner += _face_border
+    if _is_title_odd and not _is_width_odd:
+        title += " "
+    if not _is_title_odd and _is_width_odd:
+        title += " "
+
+    _padding = (width - len(title)) // 2 - 1
+    _middle_section = f"|{' ' * _padding}{title}{' ' * _padding}|\n"
+    _banner += _middle_section
+    _banner += _face_border
+    return _banner
+
+
+
+
+
+def generate_line(text, width=None):
+    if not width:
+        width = 50
+    _text_size = len(text)
+    pass
+
+
+MAX_WIDTH = 80
+banner = generate_banner("PORTCRAFT RUN SUMMARY", width=MAX_WIDTH)
+pri(banner)
+
+# for item in ["gitpy", "remoterun", "bash"]:
+#     pri(generate_line(f"{PROC_START} Module: {item}: Started", width=MAX_WIDTH))
+#     time.sleep(0.5)
+#     pri(generate_line(f"{PROC_PROGRESS} Module: {item}: running", width=MAX_WIDTH))
+#     time.sleep(0.5)
+#     pri(generate_line(f"{PROC_ERROR} Module: {item}: error", width=MAX_WIDTH))
+#     time.sleep(0.5)
+#     print()
+line = f"{PROC_START} Module: GitPY: Started"
+print(line.center(80, " "))

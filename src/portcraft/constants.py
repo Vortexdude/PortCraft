@@ -1,4 +1,5 @@
 import os
+from email.policy import default
 
 _GIT_DEFAULT_BRANCH = "main"
 _GIT_API_BASE_URL = "https://api.github.com"
@@ -15,7 +16,10 @@ task_display_mapping = dict(
     colier = "[$module_name] $module_comment",
     minimal = "# [$module_name] - $module_comment"
 )
-
+PROC_START = "🟡"
+PROC_PROGRESS = "📦"
+PROC_SUCCESS = "✅"
+PROC_ERROR = "❌"
 chars = dict(
     A = "\n  ______\n /      \\\n/$$$$$$  |\n$$ |__$$ |\n$$    $$ |\n$$$$$$$$ |\n$$ |  $$ |\n$$ |  $$ |\n$$/   $$/ \n",
     B = "\n _______  \n/       \\ \n$$$$$$$  |\n$$ |__$$ |\n$$    $$< \n$$$$$$$  |\n$$ |__$$ |\n$$    $$/ \n$$$$$$$/ \n",
@@ -43,6 +47,32 @@ chars = dict(
     X = "\n __    __ \n/  |  /  |\n$$ |  $$ |\n$$  \\/$$/ \n $$  $$<  \n  $$$$  \\ \n $$ /$$  |\n$$ |  $$ |\n$$/   $$/ \n",
     Y = "\n __      __ \n/  \\    /  |\n$$  \\  /$$/ \n $$  \\/$$/  \n  $$  $$/   \n   $$$$/    \n    $$ |    \n    $$ |    \n    $$/     \n",
     Z = "\n ________ \n/        |\n$$$$$$$$/ \n    /$$/  \n   /$$/   \n  /$$/    \n /$$/____ \n/$$      |\n$$$$$$$$/ \n",
+)
+
+BANNER_MAPPING = dict(
+    default="""
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~                                                    ~
+~              WELCOME TO PORTCRAFT                 ~
+~                                                    ~
+~     Simplifying CI/CD Workflows in Containers      ~
+~                                                    ~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+💻 Command: Execute tasks in isolated containers
+🛠️  Build: Manage automated builds and deployments
+📂 Deploy: Portable and lightweight CI/CD solutions
+    """,
+    colier="""
+|----------------------------------------------------|
+|                Portcraft CI/CD Tool                |
+|----------------------------------------------------|
+|     🚀 Run Commands in Dockerized Environments     |
+|     🛠️  Automate Builds, Tests, and Deployments    |
+|    🧩 Lightweight, Reliable, and Configurable!     |
+|----------------------------------------------------|
+"""
+
 )
 
 def test_print_chars():

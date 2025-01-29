@@ -37,7 +37,7 @@ class Module:
             if key == "name":  # grab the comment if possible
                 self._comment = value
             elif isinstance(value, dict):  # check for the args for the module
-                self._name = key
+                self._name = key.lower()
                 self._module_args = value
             else:
                 self._plugins[key] = value

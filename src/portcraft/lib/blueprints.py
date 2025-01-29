@@ -6,6 +6,23 @@ from portcraft.lib.packer import TaskPacker
 
 from portcraft.models import Module
 
+def banner(*args, **kwargs):
+    main = """
+-------------------------------------------------------
+    Portcraft - Lightweight CI/CD Container Runner
+-------------------------------------------------------
+
+    [FEATURES]
+    - 🐳 Runs commands inside Docker containers
+    - 🚀 Automates your builds, tests, and deployments
+    - 🛠️  Portable, reliable, and easy to use
+
+    [WORKFLOW]
+    -> Input Command ➡️ Container Execution ➡️ Logs & Results
+-------------------------------------------------------
+"""
+    print(main)
+
 
 class Explorer:
     def __init__(self, data):
@@ -53,6 +70,7 @@ class Blueprint:
     """ Represents a detailed plan or script for executing tasks, similar to a "blueprint" for a project. """
 
     def __init__(self, filename=None, debug=None, ignore_errors=None, dry_run=None):
+        banner()
         self._filename = filename or "test.yml"
         self._debug: bool = debug or False
         self._ignore_errors: bool = ignore_errors or False

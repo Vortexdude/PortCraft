@@ -43,7 +43,7 @@ def load_and_run_module(module_name: str, module_path=None, data=None):
 
 class TaskPacker:
     def __init__(self, module_name, module_args, module_plugins: dict = None, module_comment=None, e_vars=None, *args, **kwargs):
-        self._name = module_name
+        self._name = module_name.lower()
         self._args = module_args
         self._plugins = module_plugins
         self._vars = e_vars
